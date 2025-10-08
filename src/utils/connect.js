@@ -1,10 +1,18 @@
 import { PrismaClient } from '@prisma/client'
+
+const prismaClientSingleton = () => {
+  return new PrismaClient({
+    log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
+  })
+}
+
 let prisma
+
 if (process.env.NODE_ENV === 'production') {
-  prisma = new PrismaClient()
+  prisma = prismaClientSingleton()
 } else {
   if (!global.prisma) {
-    global.prisma = new PrismaClient()
+    global.prisma = prismaClientSingleton()
   }
   prisma = global.prisma
 }

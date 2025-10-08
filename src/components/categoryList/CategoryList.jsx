@@ -4,15 +4,23 @@ import Link from "next/link";
 import Image from "next/image";
 
 const getData = async () => {
-  const res = await fetch("http://localhost:3000/api/categories", {
-    cache: "no-store",
-  });
+  try {
+    // For server-side fetching, we need an absolute URL
+    const baseUrl = process.env.NEXT_PUBLIC_URL || process.env.NEXTAUTH_URL || 'http://localhost:3000';
+    const res = await fetch(`${baseUrl}/api/categories`, {
+      cache: "no-store",
+    });
 
-  if (!res.ok) {
-    throw new Error("Failed");
+    if (!res.ok) {
+      console.error(`Failed to fetch categories: ${res.status} ${res.statusText}`);
+      return [];
+    }
+
+    return res.json();
+  } catch (error) {
+    console.error("Error fetching categories:", error);
+    return [];
   }
-
-  return res.json();
 };
 
 const CategoryList = async () => {
@@ -23,9 +31,10 @@ const CategoryList = async () => {
       <div className={styles.categories}>
         {data?.map((item) => (
           <Link
-            href="/blog?cat=style"
+            href={`/blog?cat=${item.slug}`}
             className={`${styles.category} ${styles[item.slug]}`}
-            key={item._id}
+            key={item.id}
+            scroll={true}
           >
             {item.img && (
               <Image

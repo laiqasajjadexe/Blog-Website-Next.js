@@ -2,23 +2,46 @@ import Menu from "@/components/Menu/Menu";
 import styles from "./singlePage.module.css";
 import Image from "next/image";
 import Comments from "@/components/comments/Comments";
+import Link from "next/link";
 
 const getData = async (slug) => {
-  const res = await fetch(`http://localhost:3000/api/posts/${slug}`, {
-    cache: "no-store",
-  });
+  try {
+    // For server-side fetching, we need an absolute URL
+    const baseUrl = process.env.NEXT_PUBLIC_URL || process.env.NEXTAUTH_URL || 'http://localhost:3000';
+    const res = await fetch(`${baseUrl}/api/posts/${slug}`, {
+      cache: "no-store",
+    });
 
-  if (!res.ok) {
-    throw new Error("Failed");
+    if (!res.ok) {
+      console.error(`Failed to fetch post: ${res.status} ${res.statusText}`);
+      return null;
+    }
+
+    return res.json();
+  } catch (error) {
+    console.error("Error fetching post:", error);
+    return null;
   }
-
-  return res.json();
 };
 
 const SinglePage = async ({ params }) => {
-  const { slug } = params;
+  const { slug } = await params;
 
   const data = await getData(slug);
+
+  if (!data) {
+    return (
+      <div className={styles.container}>
+        <div className={styles.infoContainer}>
+          <div className={styles.textContainer}>
+            <h1 className={styles.title}>Post Not Found</h1>
+            <p>The post you&apos;re looking for doesn&apos;t exist or couldn&apos;t be loaded.</p>
+            <Link href="/">Go back to homepage</Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={styles.container}>
@@ -50,7 +73,7 @@ const SinglePage = async ({ params }) => {
             dangerouslySetInnerHTML={{ __html: data?.desc }}
           />
           <div className={styles.comment}>
-            <Comments postSlug={slug}/>
+            <Comments postSlug={slug} />
           </div>
         </div>
         <Menu />

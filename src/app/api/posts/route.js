@@ -23,18 +23,18 @@ export const GET = async (req) => {
 
 
 
-  
-  
+
+
   try {
     const [posts, count] = await prisma.$transaction([
       prisma.post.findMany(query),
       prisma.post.count({ where: query.where }),
     ]);
-    return new NextResponse(JSON.stringify({ posts, count }, { status: 200 }));
+    return new NextResponse(JSON.stringify({ posts, count }), { status: 200 });
   } catch (err) {
     console.log(err);
     return new NextResponse(
-      JSON.stringify({ message: "Something went wrong!" }, { status: 500 })
+      JSON.stringify({ message: "Something went wrong!" }), { status: 500 }
     );
   }
 };
@@ -54,7 +54,7 @@ export const POST = async (req) => {
 
   if (!session) {
     return new NextResponse(
-      JSON.stringify({ message: "Not Authenticated!" }, { status: 401 })
+      JSON.stringify({ message: "Not Authenticated!" }), { status: 401 }
     );
   }
 
@@ -64,11 +64,22 @@ export const POST = async (req) => {
       data: { ...body, userEmail: session.user.email },
     });
 
-    return new NextResponse(JSON.stringify(post, { status: 200 }));
+    return new NextResponse(JSON.stringify(post), { status: 200 });
   } catch (err) {
     console.log(err);
+
+    // Handle unique constraint error
+    if (err.code === 'P2002') {
+      return new NextResponse(
+        JSON.stringify({
+          message: "A post with this slug already exists. Please use a different title."
+        }),
+        { status: 409 }
+      );
+    }
+
     return new NextResponse(
-      JSON.stringify({ message: "Something went wrong!" }, { status: 500 })
+      JSON.stringify({ message: "Something went wrong!" }), { status: 500 }
     );
   }
 };
