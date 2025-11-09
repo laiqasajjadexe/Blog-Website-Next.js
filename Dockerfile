@@ -5,15 +5,18 @@ FROM node:18-alpine AS base
 FROM base AS deps
 WORKDIR /app
 
+# Install yarn globally
+RUN corepack enable && corepack prepare yarn@stable --activate
+
 # Copy package files
-COPY package*.json ./
+COPY package.json yarn.lock ./
 COPY prisma ./prisma/
 
 # Install dependencies
-RUN npm ci
+RUN yarn install --frozen-lockfile
 
 # Generate Prisma Client
-RUN npx prisma generate
+RUN yarn prisma generate
 
 # Rebuild the source code only when needed
 FROM base AS builder
@@ -23,7 +26,7 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
 # Build the application
-RUN npm run build
+RUN yarn build
 
 # Production image, copy all the files and run next
 FROM base AS runner
