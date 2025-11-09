@@ -5,18 +5,18 @@ FROM node:18-alpine AS base
 FROM base AS deps
 WORKDIR /app
 
-# Install yarn globally
-RUN corepack enable && corepack prepare yarn@stable --activate
-
 # Copy package files
-COPY package.json yarn.lock ./
+COPY package.json yarn.lock* ./
 COPY prisma ./prisma/
 
-# Install dependencies
-RUN yarn install --frozen-lockfile
+# Install dependencies using Yarn 1.x (classic)
+# --frozen-lockfile ensures reproducible builds
+# --network-timeout increases timeout for slow connections
+RUN yarn install --frozen-lockfile --network-timeout 600000
 
 # Generate Prisma Client
 RUN yarn prisma generate
+
 
 # Rebuild the source code only when needed
 FROM base AS builder
