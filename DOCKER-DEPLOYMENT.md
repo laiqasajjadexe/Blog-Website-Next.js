@@ -1,7 +1,7 @@
  # Docker Deployment Guide for Next.js Blog
 
 ## Prerequisites
-jenkins chekc
+jenkins check
 - Docker installed on your AWS machine
 - Docker Compose installed (optional but recommended)
 - Your `.env` file with all environment variables
